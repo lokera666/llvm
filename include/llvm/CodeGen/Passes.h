@@ -151,6 +151,9 @@ namespace llvm {
   /// DeadMachineInstructionElim - This pass removes dead machine instructions.
   extern char &DeadMachineInstructionElimID;
 
+  /// DeadLoopElim - This pass removes dead machine instructions.
+  extern char &DeadLoopElimID;
+
   /// This pass adds dead/undef flags after analyzing subregister lanes.
   extern char &DetectDeadLanesID;
 

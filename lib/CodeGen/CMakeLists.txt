@@ -15,6 +15,7 @@ add_llvm_library(LLVMCodeGen
   CodeGenPrepare.cpp
   CriticalAntiDepBreaker.cpp
   DeadMachineInstructionElim.cpp
+  DeadLoopElim.cpp
   DetectDeadLanes.cpp
   DFAPacketizer.cpp
   DwarfEHPrepare.cpp

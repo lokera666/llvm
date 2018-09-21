@@ -46,7 +46,8 @@ public:
     FT_SymbolId,
     FT_CVInlineLines,
     FT_CVDefRange,
-    FT_Dummy
+    FT_Dummy,
+    FT_Text
   };
 
 private:
@@ -422,6 +423,27 @@ public:
   static bool classof(const MCFragment *F) {
     return F->getKind() == MCFragment::FT_Padding;
   }
+};
+
+class MCTextFragment : public MCFragment {
+  SmallVector<char, 1024> Contents;
+public:
+  MCTextFragment(const std::string& content="", MCSection *Sec=nullptr)
+      : MCFragment(FT_Text, false, Sec) {
+         if (!content.empty())
+            addContent(content);
+      }
+   
+  void addContent(const std::string& content) {
+     for (auto c : content)
+        Contents.push_back(c);
+  }
+  SmallVectorImpl<char> &getContents() { return Contents; }
+  const SmallVectorImpl<char> &getContents() const { return Contents; }
+  static bool classof(const MCFragment *F) {
+    return F->getKind() == MCFragment::FT_Text;
+  }
+
 };
 
 class MCFillFragment : public MCFragment {

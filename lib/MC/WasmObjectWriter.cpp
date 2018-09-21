@@ -31,6 +31,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/LEB128.h"
 #include "llvm/Support/StringSaver.h"
+#include "eosio/autogen.hpp"
 #include <vector>
 
 using namespace llvm;
@@ -1014,8 +1015,13 @@ void WasmObjectWriter::writeCustomSections(const MCAssembler &Asm,
     SectionBookkeeping Section;
     auto *Sec = CustomSection.Section;
     startCustomSection(Section, CustomSection.Name);
+    dbgs() << CustomSection.Name << "\n";
 
     Sec->setSectionOffset(W.OS.tell() - Section.ContentsOffset);
+    for (auto& s : Sec->getFragmentList()) {
+      if (auto* ss = dyn_cast<MCTextFragment>(&s))
+          dbgs() << ss->getContents()[0] << "\n";
+    }
     Asm.writeSectionData(W.OS, Sec, Layout);
 
     CustomSection.OutputContentsOffset = Section.ContentsOffset;
@@ -1077,10 +1083,18 @@ static bool isInSymtab(const MCSymbolWasm &Sym) {
 uint64_t WasmObjectWriter::writeObject(MCAssembler &Asm,
                                        const MCAsmLayout &Layout) {
   uint64_t StartOffset = W.OS.tell();
-
+  static std::vector<std::unique_ptr<MCTextFragment>> fragments;
   LLVM_DEBUG(dbgs() << "WasmObjectWriter::writeObject\n");
   MCContext &Ctx = Asm.getContext();
 
+  auto autogen_section = Ctx.getWasmSection(".eosio_autogen", llvm::SectionKind::getMetadata());
+  dbgs() << "PP " << (uint64_t)&eosio::cdt::autogen::get() << "\n";
+  for ( auto s : eosio::cdt::autogen::get().get_actions() ) {
+     dbgs() << "SS " << s << "\n";
+  }
+  fragments.push_back(std::unique_ptr<MCTextFragment>(new MCTextFragment{"hello"})); //, autogen_section}));
+  autogen_section->getFragmentList().push_back(&(*fragments[0]));
+  CustomSections.emplace_back("eosio_autogen", autogen_section);
   // Collect information from the available symbols.
   SmallVector<WasmFunction, 4> Functions;
   SmallVector<uint32_t, 4> TableElems;
