@@ -14,7 +14,9 @@
 #ifndef LLVM_SUPPORT_FILEUTILITIES_H
 #define LLVM_SUPPORT_FILEUTILITIES_H
 
-#include "llvm/Support/FileSystem.h"
+#include <set>
+
+#include "llvm/Support/VirtualFileSystem.h"
 #include "llvm/Support/Path.h"
 
 namespace llvm {
@@ -72,6 +74,35 @@ namespace llvm {
     /// will not be removed when the object is destroyed.
     void releaseFile() { DeleteIt = false; }
   };
+
+template<typename _Stream, typename _StringType>
+void printOptions(const std::string& prefix, const std::vector<_StringType>& opts, _Stream& stdout, _Stream& stderr) {
+   IntrusiveRefCntPtr<vfs::FileSystem> fileSystem = vfs::getRealFileSystem();
+   std::set<std::string> normalized;
+   for (const auto& opt : opts) {
+      if (opt.size() > 2){
+         if (opt.find(prefix) == 0){
+            std::string p = opt.substr(prefix.size());
+            SmallString<PATH_MAX> buffer;
+            auto error_code = fileSystem->getRealPath(p, buffer);
+            if (error_code){
+               stderr << "error normalizing path " << p << " " << error_code.message() << '\n';
+            }
+            //print non-normalized path anyway
+            if (buffer.str().empty()) {
+               normalized.emplace(p);
+            }
+            else {
+               normalized.emplace(buffer.str());
+            }
+         }
+      }
+   }
+   for (const auto& path : normalized) {
+      stdout << path << '\n';
+   }
+}
+
 } // End llvm namespace
 
 #endif
