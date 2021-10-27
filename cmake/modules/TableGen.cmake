@@ -15,6 +15,9 @@ function(tablegen project ofn)
   # Use depfile instead of globbing arbitrary *.td(s)
   # DEPFILE is available for Ninja Generator with CMake>=3.7.
   if(CMAKE_GENERATOR STREQUAL "Ninja" AND NOT CMAKE_VERSION VERSION_LESS 3.7)
+    if(POLICY CMP0116)
+      cmake_policy(set CMP0116 OLD)
+    endif()
     # Make output path relative to build.ninja, assuming located on
     # ${CMAKE_BINARY_DIR}.
     # CMake emits build targets as relative paths but Ninja doesn't identify
